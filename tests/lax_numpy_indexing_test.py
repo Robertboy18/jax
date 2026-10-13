@@ -1873,7 +1873,6 @@ class IndexedUpdateTest(jtu.JaxTestCase):
     self.assertAllClose(val, np.array(0., np.float32))
     self.assertAllClose(grad, np.array([0., 0.], np.float32))
 
-
   @parameterized.parameters(itertools.chain.from_iterable(
     jtu.sample_product_testcases(
       [dict(reducer=reducer, op=op, identity=identity)],
@@ -1912,7 +1911,6 @@ class IndexedUpdateTest(jtu.JaxTestCase):
     self._CheckAgainstNumpy(np_fun, jnp_fun, args_maker)
     if num_segments is not None:
       self._CompileAndCheck(jnp_fun, args_maker)
-
 
   @parameterized.parameters(itertools.chain.from_iterable(
     jtu.sample_product_testcases(
@@ -2016,6 +2014,16 @@ class IndexedUpdateTest(jtu.JaxTestCase):
 
     self.assertArraysEqual(jax.jacrev(f)(x, i), expected)
     self.assertArraysEqual(jax.jacrev(jax.vmap(f, (None, 0)))(x, i), expected)
+
+  def testFullSliceSetFollowedByReverse(self):
+    # Regression test for https://github.com/jax-ml/jax/issues/41497
+    x = jnp.arange(4)
+    f1 = jax.jit(lambda x: jnp.zeros_like(x).at[:].set(x)[::-1])
+    self.assertArraysEqual(f1(x), x[::-1])
+
+    f2 = jax.jit(lambda x: x.at[:].set(0)[::-1])
+    self.assertArraysEqual(f2(x), jnp.zeros_like(x))
+
 
 @jtu.with_config(jax_check_static_indices=True)
 class ValidateIndicesTest(jtu.JaxTestCase):
