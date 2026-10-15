@@ -577,6 +577,11 @@ async def main():
     if clang_major_version < 19:
       wheel_build_command_base.append("--define=xnn_enable_avxvnniint8=false")
   else:
+    if (
+        "jaxlib" in args.wheels or "cuda" in args.wheels
+    ) and utils.is_linux_x86_64(arch, os_name):
+      wheel_build_command_base.append("--config=linux_x86_64")
+
     # TODO:(yuriit) Check version of Clang when it will be available outside
     # of rules_ml_toolchain. Current hermetic Clang version is 18
     wheel_build_command_base.append("--define=xnn_enable_avxvnniint8=false")
